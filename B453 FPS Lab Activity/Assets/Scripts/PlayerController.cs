@@ -22,6 +22,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField] float jumpForce;
     [SerializeField] float gravity = 9.81f;
 
+    public int SpareRounds {get => spareRounds; set => spareRounds = value;}
+
 
     // Used to store the forward and backward movement input.
     private float moveFB;
@@ -54,7 +56,7 @@ public class PlayerController : MonoBehaviour
         //playerCam = transform.GetChild(0).GetComponent<Camera>(); 
 
         //Find the child object named "Camera" and get its Camera component.
-        playerCam = transform.Find("Camera").GetComponent<Camera>();
+        playerCam = transform.Find("Main Camera").GetComponent<Camera>();
     }
 
     void Update()
@@ -104,53 +106,30 @@ public class PlayerController : MonoBehaviour
         #endregion
         Vector3 movement = new Vector3(moveLR, 0, moveFB).normalized * movementSpeed;
 
-        if (Input.GetKeyDown(KeyCode.Space) && cc.isGrounded)
-        {
-            cc.Move(Vector3.up * jumpForce);
-        }
-
         if (cc.isGrounded)
         {
-            movement.y = -2f;
+            if (jumpVelocity.y < 0)
+            {
+                jumpVelocity.y = -2f;
+            }
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                Debug.Log("Jump");
+                jumpVelocity.y = jumpForce;
+            }
         }
-        else
+
+        if (!cc.isGrounded)
         {
-            movement.y -= gravity;
+            jumpVelocity.y -= gravity * Time.deltaTime;
         }
 
-
-        // Use the right/left mouse movement to rotate the Player's body left and right (around the Y axis).
         transform.Rotate(0, rotX, 0);
 
-        // Rotate the Player's camera up and down (on the X axis) according to up/down mouse movement.
         playerCam.transform.localRotation = Quaternion.Euler(rotY, 0, 0);
 
-        // Update our movement vector to take into account the current Player's rotation, and combine that with the current movement vector.
         movement = transform.rotation * movement;
-
-        cc.Move(movement * Time.deltaTime);
-
-        //---------- Changed -----------------
-        // Gravity and Jumping
-        //if (cc.isGrounded)
-        //{
-        //    if (jumpVelocity.y < 0)
-        //    {
-        //        jumpVelocity.y = -2f; // Ensures player stays on ground
-        //    }
-
-        //    if (Input.GetKeyDown(KeyCode.Space)) // Jumping
-        //    {
-        //        Debug.Log("Jump");
-        //        jumpVelocity.y = jumpForce;
-        //    }
-        //}
-
-        //// Apply gravity
-        //if (!cc.isGrounded)
-        //{
-        //    jumpVelocity.y -= gravity * Time.deltaTime;
-        //}
+        cc.Move(movement + jumpVelocity) * Time.deltaTime;
 
         //// Apply movement and gravity
         //cc.Move((movement + jumpVelocity) * Time.deltaTime);

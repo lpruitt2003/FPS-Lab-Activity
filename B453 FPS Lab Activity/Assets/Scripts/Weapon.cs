@@ -13,13 +13,38 @@ public abstract class Weapon : MonoBehaviour
     [SerializeField] protected float firerate;
     [SerializeField] protected int bulletCount;
     [SerializeField] protected int maxCapacity;
+    [SerializeField] private PlayerController playerController;
+
+    protected void Awake()
+    {
+        playerController = gameObject.Find("Player").GetComponent<PlayerController>();
+        UIManager.Instance.UpdateAmmoUI(bulletCount, playerController.SpareRounds);
+    }
 
     protected virtual void Shoot()
     {
-        // Code to shoot the weapon.
+        UiManager.Instance.UpdateAmmoUI(bulletCount, playerController.SpareRounds);
+        if (bulletCount <= 0)
+        {
+            Reload();
+        }
     }
     protected virtual void Reload()
     {
+        StartCoroutine(ReloadCoroutine());
         // Code to reload the weapon.
+    }
+
+    protected IEnumerator ReloadCoroutine()
+    {
+        if (playerController.SpareRounds >= maxCapacity)
+        {
+            bykkeCount = maxCapacity;
+            playerController.SpareRounds -= maxCapacity;
+        }
+        
+        yield return new WaitForSeconds(1f);
+
+        UImanager.Instance.UpdateAmmoUI(bulletCount, playerController.SpareRounds);
     }
 }
